@@ -1,5 +1,7 @@
 import requests
 import msal
+import atexit
+import os.path
 
 TENANT_ID = '356e67d4-d13d-44fe-815b-3fb842925be4'
 CLIENT_ID = '208496d8-671c-4f89-8df6-ceded22c8a2e'
@@ -15,20 +17,45 @@ SCOPES = [
     'User.ReadBasic.All'
 ]
 
-app = msal.PublicClientApplication(CLIENT_ID, authority=AUTHORITY)
+cache = msal.SerializableTokenCache()
 
-flow = app.initiate_device_flow(scopes=SCOPES)
-if 'user_code' not in flow:
-    raise Exception('Failed to create device flow')
+if os.path.exists('token_cache.bin'):
+    cache.deserialize(open('token_cache.bin', 'r').read())
 
-print(flow['message'])
+atexit.register(lambda: open('token_cache.bin', 'w').write(cache.serialize()) if cache.has_state_changed else None)
 
-result = app.acquire_token_by_device_flow(flow)
+app = msal.PublicClientApplication(CLIENT_ID, authority=AUTHORITY, token_cache=cache)
+
+accounts = app.get_accounts()
+result = None
+if len(accounts) > 0:
+    result = app.acquire_token_silent(SCOPES, account=accounts[0])
+
+if result is None:
+    flow = app.initiate_device_flow(scopes=SCOPES)
+    if 'user_code' not in flow:
+        raise Exception('Failed to create device flow')
+
+    print(flow['message'])
+
+    result = app.acquire_token_by_device_flow(flow)
 
 if 'access_token' in result:
-    result = requests.get(f'{ENDPOINT}/me', headers={'Authorization': 'Bearer ' + result['access_token']})
+    access_token =  result['access_token']
+    # onedrive = 'me'
+    # result = requests.get(f'{ENDPOINT}/{onedrive}', headers={'Authorization': 'Bearer ' + access_token})
+    # result.raise_for_status()
+    # print(result.json())
+    
+
+    onedrive = "me/drives/b!5ep1PXhxG0Km5Jqkf-u_DFufdhWHEjlHu4PtVKswFOR5Qfty_KoNSbRJUCcXIzx5/items/01STA2XAXZOOCEYHHI6FH2WGUNOAN6LYJU/children"
+    result = requests.get(f'{ENDPOINT}/{onedrive}', headers={'Authorization': 'Bearer ' + access_token})
     result.raise_for_status()
-    print(result.json())
+    json_data = result.json()
+    for value in json_data["value"] :
+        print(value["name"])
+   
+    
 
 else:
     raise Exception('no access token in result')
