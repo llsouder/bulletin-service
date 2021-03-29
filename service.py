@@ -2,6 +2,7 @@ import requests
 import msal
 import atexit
 import os.path
+from datetime import datetime
 
 TENANT_ID = '356e67d4-d13d-44fe-815b-3fb842925be4'
 CLIENT_ID = '208496d8-671c-4f89-8df6-ceded22c8a2e'
@@ -54,6 +55,10 @@ if 'access_token' in result:
     json_data = result.json()
     for value in json_data["value"] :
         print(value["name"])
+    oldest = max(json_data["value"], key = lambda k: datetime.strptime(k["lastModifiedDateTime"], "%Y-%m-%dT%H:%M:%SZ"))
+    # "lastModifiedDateTime": "2021-03-18T03:20:57Z"
+    print(f'This is so new {oldest["name"]}')
+    print(f'This is so new {oldest["webUrl"]}')
    
     
 
