@@ -18,21 +18,25 @@ SCOPES = [
     'User.ReadBasic.All'
 ]
 
-cache = msal.SerializableTokenCache()
+def tooCool():
+    return "too cool"
 
-if os.path.exists('token_cache.bin'):
+def getLatestBulletin():
+  cache = msal.SerializableTokenCache()
+
+  if os.path.exists('token_cache.bin'):
     cache.deserialize(open('token_cache.bin', 'r').read())
 
-atexit.register(lambda: open('token_cache.bin', 'w').write(cache.serialize()) if cache.has_state_changed else None)
+  atexit.register(lambda: open('token_cache.bin', 'w').write(cache.serialize()) if cache.has_state_changed else None)
 
-app = msal.PublicClientApplication(CLIENT_ID, authority=AUTHORITY, token_cache=cache)
+  app = msal.PublicClientApplication(CLIENT_ID, authority=AUTHORITY, token_cache=cache)
 
-accounts = app.get_accounts()
-result = None
-if len(accounts) > 0:
+  accounts = app.get_accounts()
+  result = None
+  if len(accounts) > 0:
     result = app.acquire_token_silent(SCOPES, account=accounts[0])
 
-if result is None:
+  if result is None:
     flow = app.initiate_device_flow(scopes=SCOPES)
     if 'user_code' not in flow:
         raise Exception('Failed to create device flow')
@@ -41,7 +45,7 @@ if result is None:
 
     result = app.acquire_token_by_device_flow(flow)
 
-if 'access_token' in result:
+  if 'access_token' in result:
     access_token =  result['access_token']
     # onedrive = 'me'
     # result = requests.get(f'{ENDPOINT}/{onedrive}', headers={'Authorization': 'Bearer ' + access_token})
@@ -55,12 +59,13 @@ if 'access_token' in result:
     json_data = result.json()
     for value in json_data["value"] :
         print(value["name"])
-    oldest = max(json_data["value"], key = lambda k: datetime.strptime(k["lastModifiedDateTime"], "%Y-%m-%dT%H:%M:%SZ"))
+    most_recent = max(json_data["value"], key = lambda k: datetime.strptime(k["lastModifiedDateTime"], "%Y-%m-%dT%H:%M:%SZ"))
     # "lastModifiedDateTime": "2021-03-18T03:20:57Z"
-    print(f'This is so new {oldest["name"]}')
-    print(f'This is so new {oldest["webUrl"]}')
-   
+    print(f'This is so new {most_recent["name"]}')
+    print(f'This is so new {most_recent["webUrl"]}')
+    return most_recent["webUrl"]
     
 
-else:
+  else:
     raise Exception('no access token in result')
+
