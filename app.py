@@ -1,5 +1,5 @@
 from service import tooCool, getLatestBulletin
-from flask import Flask
+from flask import Flask, render_template
 
 
 
@@ -7,8 +7,8 @@ from flask import Flask
 app = Flask(__name__)
 
 @app.route('/')
-def hello_world():
-    return 'Hello, World!'
+def current_bulletin():
+    return render_template('index.html', webUrl=getLatestBulletin())
 
 @app.route('/x')
 def test_route():
