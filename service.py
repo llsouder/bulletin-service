@@ -2,6 +2,7 @@ import requests
 import msal
 import atexit
 import os.path
+import json
 from datetime import datetime
 
 TENANT_ID = '356e67d4-d13d-44fe-815b-3fb842925be4'
@@ -47,25 +48,27 @@ def getLatestBulletin():
 
   if 'access_token' in result:
     access_token =  result['access_token']
-    # onedrive = 'me'
-    # result = requests.get(f'{ENDPOINT}/{onedrive}', headers={'Authorization': 'Bearer ' + access_token})
-    # result.raise_for_status()
-    # print(result.json())
     
+  
+    drive_id = "b!5ep1PXhxG0Km5Jqkf-u_DFufdhWHEjlHu4PtVKswFOR5Qfty_KoNSbRJUCcXIzx5"
+    bulletin_folder_id = "01STA2XAXZOOCEYHHI6FH2WGUNOAN6LYJU"
 
-    onedrive = "me/drives/b!5ep1PXhxG0Km5Jqkf-u_DFufdhWHEjlHu4PtVKswFOR5Qfty_KoNSbRJUCcXIzx5/items/01STA2XAXZOOCEYHHI6FH2WGUNOAN6LYJU/children"
-    result = requests.get(f'{ENDPOINT}/{onedrive}', headers={'Authorization': 'Bearer ' + access_token})
+    list_bulletin_folder = f'{ENDPOINT}/me/drives/{drive_id}/items/{bulletin_folder_id}/children'
+    result = requests.get(list_bulletin_folder, headers={'Authorization': 'Bearer ' + access_token})
     result.raise_for_status()
     json_data = result.json()
-    for value in json_data["value"] :
-        print(value["name"])
     most_recent = max(json_data["value"], key = lambda k: datetime.strptime(k["lastModifiedDateTime"], "%Y-%m-%dT%H:%M:%SZ"))
-    # "lastModifiedDateTime": "2021-03-18T03:20:57Z"
-    print(f'This is so new {most_recent["name"]}')
-    print(f'This is so new {most_recent["webUrl"]}')
-    return most_recent["webUrl"]
+
+    share_link = f'{ENDPOINT}/me/drive/items/{most_recent["id"]}/createlink'
+    anonymous_view={'type':'view', 'scope':'anonymous'}
+    result = requests.post(share_link, headers={'Authorization': f'Bearer {access_token}'}, json=anonymous_view )
+    result.raise_for_status()
+    json_data = result.json()
+    return result.json()["link"]["webUrl"]
     
 
   else:
     raise Exception('no access token in result')
 
+if __name__=="__main__":
+      getLatestBulletin()
