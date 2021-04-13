@@ -19,10 +19,23 @@ SCOPES = [
     'User.ReadBasic.All'
 ]
 
-def tooCool():
-    return "too cool"
+drive_id = "b!5ep1PXhxG0Km5Jqkf-u_DFufdhWHEjlHu4PtVKswFOR5Qfty_KoNSbRJUCcXIzx5"
+bulletin_folder_id = "01STA2XAXZOOCEYHHI6FH2WGUNOAN6LYJU"
 
-def getLatestBulletin():
+def webhook():
+  result = getAccessToken()
+
+  if 'access_token' in result:
+    access_token =  result['access_token']
+    
+    list_bulletin_folder = f'{ENDPOINT}/me/drive/root/children'
+    result = requests.get(list_bulletin_folder, headers={'Authorization': 'Bearer ' + access_token})
+    result.raise_for_status()
+    json_data = result.json()
+    for values in json_data["value"]:
+      print(f'{values["name"]} {values["id"]}')
+
+def getAccessToken():
   cache = msal.SerializableTokenCache()
 
   if os.path.exists('token_cache.bin'):
@@ -45,13 +58,15 @@ def getLatestBulletin():
     print(flow['message'])
 
     result = app.acquire_token_by_device_flow(flow)
+    
+  return result
+
+def getLatestBulletin():
+  
+  result = getAccessToken()
 
   if 'access_token' in result:
     access_token =  result['access_token']
-    
-  
-    drive_id = "b!5ep1PXhxG0Km5Jqkf-u_DFufdhWHEjlHu4PtVKswFOR5Qfty_KoNSbRJUCcXIzx5"
-    bulletin_folder_id = "01STA2XAXZOOCEYHHI6FH2WGUNOAN6LYJU"
 
     list_bulletin_folder = f'{ENDPOINT}/me/drives/{drive_id}/items/{bulletin_folder_id}/children'
     result = requests.get(list_bulletin_folder, headers={'Authorization': 'Bearer ' + access_token})
