@@ -35,6 +35,19 @@ def webhook():
     for values in json_data["value"]:
       print(f'{values["name"]} {values["id"]}')
 
+    subscribe = { "changeType": "updated",
+                  "notificationUrl": "https://569a4ded415b.ngrok.io/api/web-receiver",
+                  "resource": "/me/drive/root",
+                  "expirationDateTime":"2021-04-20T18:23:45.9356913Z",
+                  "clientState": "client-specific string" }
+                 
+    print(subscribe)
+    # folder_id=next(item for item in json_data["value"] if item["name"] == "web-hook-test")["id"]
+    # print(folder_id)
+    subscribe_url=f'{ENDPOINT}/subscriptions'
+    result=requests.post(subscribe_url, json=subscribe, headers={'Authorization': 'Bearer ' + access_token})
+    print(result.json())
+
 def getAccessToken():
   cache = msal.SerializableTokenCache()
 
