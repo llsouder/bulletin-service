@@ -10,7 +10,12 @@ def current_bulletin():
 
 @app.route('/api/web-receiver', methods=['POST'])
 def respond():
-    return request.args.get("validationToken")
+    valicationToken = request.args.get("validationToken")
+    if valicationToken is not None:
+        print("sending back validation.")
+        return valicationToken
+    print(request.json)
+    return ""
 
 
 if __name__=="__main__":
