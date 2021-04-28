@@ -98,5 +98,32 @@ def getLatestBulletin():
   else:
     raise Exception('no access token in result')
 
+def list_subs():
+  result = getAccessToken()
+  if 'access_token' in result:
+    access_token =  result['access_token']
+    
+    subscriptions = f'{ENDPOINT}/subscriptions'
+    result = requests.get(subscriptions, headers={'Authorization': 'Bearer ' + access_token})
+    result.raise_for_status()
+    json_data = result.json()
+    for sub_entry in json_data["value"]:
+      print(sub_entry["id"])
+
+def del_subs():
+  result = getAccessToken()
+  if 'access_token' in result:
+    access_token =  result['access_token']
+    
+    subscriptions = f'{ENDPOINT}/subscriptions'
+    result = requests.get(subscriptions, headers={'Authorization': 'Bearer ' + access_token})
+    result.raise_for_status()
+    json_data = result.json()
+    for sub_entry in json_data["value"]:
+      delete_sub = f'{ENDPOINT}/subscriptions/{sub_entry["id"]}'
+      result = requests.delete(f'{delete_sub}', headers={'Authorization': 'Bearer ' + access_token})
+      result.raise_for_status()
+      print(sub_entry["id"])
+
 if __name__=="__main__":
       getLatestBulletin()
